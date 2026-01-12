@@ -1,0 +1,30 @@
+import { Controller, Get, Patch, Param, Body, Query, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { PoliciesGuard, Permission } from '../casl/policies.guard';
+import { CheckPermissions } from '../custom/permissions.decorator';
+import { AuthGuard } from '../auth/auth.guard'; // Allows validating JWT
+import { UserStatus } from '@prisma/client';
+
+@Controller('users')
+@UseGuards(AuthGuard, PoliciesGuard)
+export class UsersController {
+    constructor(private readonly usersService: UsersService) { }
+
+    @Get()
+    @CheckPermissions(Permission.MANAGE_USERS)
+    async findAll(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    ) {
+        return this.usersService.findAll(page, limit);
+    }
+
+    @Patch(':id/status')
+    @CheckPermissions(Permission.MANAGE_USERS)
+    async updateStatus(
+        @Param('id') id: string,
+        @Body('status') status: UserStatus,
+    ) {
+        return this.usersService.updateStatus(id, status);
+    }
+}

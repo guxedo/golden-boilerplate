@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mgs-postgres
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my_golden_stack
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Placeholders for future services to facilitate `docker-compose up` usage documentation
+  # api:
+  #   build: ./apps/api
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:password@postgres:5432/my_golden_stack
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres_data:
