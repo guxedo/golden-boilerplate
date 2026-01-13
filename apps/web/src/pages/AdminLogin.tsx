@@ -32,7 +32,7 @@ export default function AdminLogin() {
             }
 
             login(response.data.access_token, { email: data.email, id: response.data.sub, role: response.data.role });
-            navigate({ to: '/admin/dashboard' });
+            navigate({ to: '/admin' });
         } catch (err: any) {
             if (err.response?.status === 403) {
                 setError('Account pending approval or disabled.');
