@@ -8,15 +8,16 @@ import {
     createRootRoute,
     createRoute,
     Outlet,
-    Link,
     redirect
 } from '@tanstack/react-router'
 import { AuthProvider } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import LandingPage from './pages/LandingPage'
 
 const queryClient = new QueryClient()
 
@@ -33,30 +34,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <h1 className="text-4xl font-bold mb-4">My Golden Stack</h1>
-            <p className="text-muted-foreground mb-8">
-                Production-ready Monorepo Boilerplate.
-            </p>
-            <div className="flex gap-4">
-                <Link to="/login" className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90">
-                    User Login
-                </Link>
-                <Link to="/admin/login" className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:opacity-90">
-                    Admin Login
-                </Link>
-                <a
-                    href="https://github.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-2 border border-input rounded hover:bg-accent hover:text-accent-foreground"
-                >
-                    Documentation
-                </a>
-            </div>
-        </div>
-    ),
+    component: LandingPage,
 })
 
 const loginRoute = createRoute({
@@ -84,6 +62,17 @@ const dashboardRoute = createRoute({
     }
 })
 
+const verifyRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/verify',
+    component: VerifyEmail,
+    validateSearch: (search: Record<string, unknown>) => {
+        return {
+            token: search.token as string,
+        }
+    },
+})
+
 // --- Admin Routes ---
 
 const adminLoginRoute = createRoute({
@@ -94,7 +83,7 @@ const adminLoginRoute = createRoute({
 
 const adminDashboardRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/admin/dashboard',
+    path: '/admin',
     component: AdminDashboard,
     beforeLoad: () => {
         const token = localStorage.getItem('token');
@@ -115,6 +104,7 @@ const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
     registerRoute,
+    verifyRoute,
     dashboardRoute,
     adminLoginRoute,
     adminDashboardRoute
