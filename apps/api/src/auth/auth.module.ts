@@ -4,8 +4,11 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PoliciesGuard } from '../casl/policies.guard';
 
+import { MailModule } from '../mail/mail.module';
+
 @Module({
     imports: [
+        MailModule,
         JwtModule.register({
             global: true,
             secret: process.env.JWT_SECRET || 'secretKey', // In production use env vars

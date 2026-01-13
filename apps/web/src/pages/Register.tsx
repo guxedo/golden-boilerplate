@@ -24,7 +24,7 @@ export default function Register() {
     const onSubmit = async (data: RegisterFormData) => {
         try {
             await api.post('/auth/register', data);
-            alert('Registration successful! Please wait for admin approval.');
+            alert('Registration successful! Please check your email to verify your account.');
             navigate({ to: '/login' });
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registration failed.');
