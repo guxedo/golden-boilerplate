@@ -13,5 +13,17 @@ export default defineConfig({
     server: {
         port: 5173,
         host: true
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom'],
+                    ui: ['@radix-ui/react-avatar', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot', 'lucide-react'],
+                    tanstack: ['@tanstack/react-query', '@tanstack/react-table', '@tanstack/react-router'],
+                    recharts: ['recharts']
+                }
+            }
+        }
     }
 });
