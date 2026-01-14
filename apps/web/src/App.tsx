@@ -73,6 +73,9 @@ const verifyRoute = createRoute({
     },
 })
 
+import AdminLayout from './layouts/AdminLayout'
+import { AdminUserList } from './components/AdminUserList'
+
 // --- Admin Routes ---
 
 const adminLoginRoute = createRoute({
@@ -81,10 +84,10 @@ const adminLoginRoute = createRoute({
     component: AdminLogin,
 })
 
-const adminDashboardRoute = createRoute({
+const adminRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/admin',
-    component: AdminDashboard,
+    component: AdminLayout,
     beforeLoad: () => {
         const token = localStorage.getItem('token');
         const userStr = localStorage.getItem('user');
@@ -100,6 +103,18 @@ const adminDashboardRoute = createRoute({
     }
 })
 
+const adminDashboardRoute = createRoute({
+    getParentRoute: () => adminRoute,
+    path: '/',
+    component: AdminDashboard,
+})
+
+const adminUsersRoute = createRoute({
+    getParentRoute: () => adminRoute,
+    path: '/users',
+    component: AdminUserList, // Reusing the list component as the page for now
+})
+
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
@@ -107,7 +122,10 @@ const routeTree = rootRoute.addChildren([
     verifyRoute,
     dashboardRoute,
     adminLoginRoute,
-    adminDashboardRoute
+    adminRoute.addChildren([
+        adminDashboardRoute,
+        adminUsersRoute
+    ])
 ])
 
 const router = createRouter({ routeTree })

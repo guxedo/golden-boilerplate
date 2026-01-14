@@ -17,7 +17,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
         JwtModule.register({
             global: true,
             secret: process.env.JWT_SECRET || 'secretKey', // In production use env vars
-            signOptions: { expiresIn: '60s' },
+            signOptions: { expiresIn: '1d' },
         }),
     ],
     providers: [AuthService, PoliciesGuard, GoogleStrategy, FacebookStrategy],

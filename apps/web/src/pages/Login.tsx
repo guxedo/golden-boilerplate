@@ -27,7 +27,12 @@ export default function Login() {
             const response = await api.post('/auth/login', data);
             // Ensure your backend returns { access_token, ...user } or similar.
             // Adjust according to your AuthService.
-            login(response.data.access_token, { email: data.email, id: response.data.sub, role: response.data.role });
+            login(response.data.access_token, {
+                email: response.data.email,
+                id: response.data.sub,
+                role: response.data.role,
+                name: response.data.name || null,
+            });
             navigate({ to: '/dashboard' });
         } catch (err: any) {
             if (err.response?.status === 403) {
