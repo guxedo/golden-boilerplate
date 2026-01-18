@@ -17,19 +17,25 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Generate Repomix (Raw Text)
-        # Generate the standard output as .txt first (safe version)
-        run: npx repomix --style xml --output repomix-output.txt
-
-      - name: Create Sanitized XML
-        # 1. Copy txt to xml
-        # 2. Use sed to delete all lines from the start (1) until the first line that starts with '<'
-        #    This removes the "This file is a merged representation..." preamble.
+      - name: Generate Context and Wrap in HTML
         run: |
-          cp repomix-output.txt repomix-output.xml
-          sed -i '0,/<[^?]/s/.*\(<[^?]\)/\1/' repomix-output.xml || true
-          # Alternative safer sed: remove lines until the first tag is found
-          sed -i '/^</!d' repomix-output.xml
+          npx repomix --style xml --output repomix-output.txt
+          
+          echo '<!DOCTYPE html>' > index.html
+          echo '<html lang="en">' >> index.html
+          echo '<head><meta charset="UTF-8"><title>AI Context Source</title></head>' >> index.html
+          echo '<body>' >> index.html
+          echo '<h1>Golden Boilerplate Context</h1>' >> index.html
+          echo '<p>Generated on: '$(date)'</p>' >> index.html
+          echo '<hr>' >> index.html
+          
+          echo '<pre>' >> index.html
+          
+          cat repomix-output.txt >> index.html
+          
+          echo '</pre>' >> index.html
+          echo '</body>' >> index.html
+          echo '</html>' >> index.html
 
       - name: Push to AI Context Branch
         run: |
@@ -39,8 +45,7 @@ jobs:
           git checkout --orphan ai-context
           git reset --hard
           
-          # Add BOTH files
-          git add -f repomix-output.txt repomix-output.xml
+          git add -f index.html
           
-          git commit -m "chore: update ai context (txt and sanitized xml) [skip ci]"
+          git commit -m "chore: update ai context (html wrapper) [skip ci]"
           git push origin ai-context --force
