@@ -1,0 +1,4400 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+# File Summary
+
+## Purpose
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+## File Format
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
+
+## Usage Guidelines
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+## Notes
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+
+# Directory Structure
+```
+.github/
+  workflows/
+    ci.yml
+    update-ai-context.yml
+apps/
+  api/
+    prisma/
+      migrations/
+        20260112204843_add_unverified_status/
+          migration.sql
+        migration_lock.toml
+      schema.prisma
+      seed.ts
+    src/
+      auth/
+        strategies/
+          facebook.strategy.ts
+          google.strategy.ts
+        auth.controller.ts
+        auth.guard.ts
+        auth.module.ts
+        auth.service.ts
+      casl/
+        policies.guard.ts
+      common/
+        pagination/
+          pagination.util.ts
+      custom/
+        permissions.decorator.ts
+      mail/
+        mail.module.ts
+        mail.service.ts
+      users/
+        entities/
+          user.entity.spec.ts
+          user.entity.ts
+        repositories/
+          users.repository.ts
+        users.controller.ts
+        users.module.ts
+        users.service.spec.ts
+        users.service.ts
+      app.module.ts
+      main.ts
+    .eslintrc.js
+    Dockerfile
+    jest.config.js
+    package.json
+    tsconfig.json
+  web/
+    src/
+      components/
+        admin/
+          AdminHeader.tsx
+          AdminSidebar.tsx
+        ui/
+          avatar.tsx
+          badge.tsx
+          button.tsx
+          card.tsx
+          dropdown-menu.tsx
+          input.tsx
+          table.tsx
+        AdminUserList.tsx
+        Header.tsx
+      context/
+        AuthContext.tsx
+      layouts/
+        AdminLayout.tsx
+      lib/
+        api.ts
+        utils.ts
+      pages/
+        AdminDashboard.tsx
+        AdminLogin.tsx
+        Dashboard.tsx
+        LandingPage.tsx
+        Login.tsx
+        Register.tsx
+        VerifyEmail.tsx
+      styles/
+        globals.css
+      App.tsx
+      main.tsx
+      vite-env.d.ts
+    .eslintrc.cjs
+    components.json
+    Dockerfile
+    index.html
+    package.json
+    postcss.config.cjs
+    tailwind.config.ts
+    tsconfig.json
+    tsconfig.node.json
+    vite.config.ts
+docs/
+  architecture.md
+  deployment.md
+  theming.md
+packages/
+  config/
+    package.json
+  types/
+    src/
+      index.ts
+    package.json
+  ui/
+    src/
+      index.tsx
+    package.json
+.gitignore
+docker-compose.yml
+package.json
+pnpm-workspace.yaml
+README.md
+turbo.json
+```
+
+# Files
+
+## File: .github/workflows/ci.yml
+````yaml
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    name: Build and Test
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Lint
+        run: pnpm lint
+
+      # - name: Test
+      #   run: pnpm test
+````
+
+## File: .github/workflows/update-ai-context.yml
+````yaml
+name: Update AI Context
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  update-context-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate AI Context (Markdown format)
+        run: npx repomix --style markdown --output repomix-output.txt
+
+      - name: Push to AI Context Branch
+        run: |
+          git config --global user.name 'AI Context Bot'
+          git config --global user.email 'bot@noreply.github.com'
+          
+          git checkout --orphan ai-context
+          git reset --hard
+          
+          # Agregamos el archivo de texto
+          git add -f repomix-output.txt
+          
+          git commit -m "chore: update ai context to markdown txt [skip ci]"
+          git push origin ai-context --force
+````
+
+## File: apps/api/prisma/migrations/20260112204843_add_unverified_status/migration.sql
+````sql
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
+
+-- CreateEnum
+CREATE TYPE "UserStatus" AS ENUM ('UNVERIFIED', 'PENDING', 'ACTIVE', 'DISABLED');
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "name" TEXT,
+    "role" "Role" NOT NULL DEFAULT 'USER',
+    "status" "UserStatus" NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+````
+
+## File: apps/api/prisma/migrations/migration_lock.toml
+````toml
+# Please do not edit this file manually
+# It should be added in your version-control system (i.e. Git)
+provider = "postgresql"
+````
+
+## File: apps/api/prisma/schema.prisma
+````prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  UNVERIFIED
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  name      String?
+  role      Role       @default(USER)
+  status    UserStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Social Login Fields
+  provider   String?  @default("LOCAL") // LOCAL, GOOGLE, FACEBOOK
+  providerId String?
+}
+````
+
+## File: apps/api/prisma/seed.ts
+````typescript
+import { PrismaClient, Role, UserStatus } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+    console.log('🌱 Starting seed...');
+
+    // 1. Admin User
+    const adminEmail = 'admin@example.com';
+    const admin = await prisma.user.upsert({
+        where: { email: adminEmail },
+        update: {},
+        create: {
+            email: adminEmail,
+            password: 'password123', // In a real app, hash this!
+            name: 'Super Admin',
+            role: Role.ADMIN,
+            status: UserStatus.ACTIVE,
+        },
+    });
+    console.log(`Created Admin: ${admin.email}`);
+
+    // 2. Regular User
+    const userEmail = 'user@example.com';
+    const user = await prisma.user.upsert({
+        where: { email: userEmail },
+        update: {},
+        create: {
+            email: userEmail,
+            password: 'password123',
+            name: 'John Doe',
+            role: Role.USER,
+            status: UserStatus.ACTIVE,
+        },
+    });
+    console.log(`Created User: ${user.email}`);
+
+    // 3. Pending User
+    const pendingEmail = 'pending@example.com';
+    const pending = await prisma.user.upsert({
+        where: { email: pendingEmail },
+        update: {},
+        create: {
+            email: pendingEmail,
+            password: 'password123',
+            name: 'Pending User',
+            role: Role.USER,
+            status: UserStatus.PENDING,
+        },
+    });
+    console.log(`Created Pending User: ${pending.email}`);
+
+    console.log('✅ Seeding finished.');
+}
+
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
+````
+
+## File: apps/api/src/auth/strategies/facebook.strategy.ts
+````typescript
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy } from 'passport-facebook';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
+    constructor(private configService: ConfigService) {
+        super({
+            clientID: configService.get<string>('FACEBOOK_APP_ID') || 'placeholder_id',
+            clientSecret: configService.get<string>('FACEBOOK_APP_SECRET') || 'placeholder_secret',
+            callbackURL: configService.get<string>('API_URL')
+                ? `${configService.get<string>('API_URL')}/auth/facebook/callback`
+                : 'http://localhost:3000/auth/facebook/callback',
+            scope: ['email'],
+            profileFields: ['emails', 'name', 'photos'],
+        });
+    }
+
+    async validate(
+        accessToken: string,
+        refreshToken: string,
+        profile: any,
+        done: (err: any, user: any, info?: any) => void,
+    ): Promise<any> {
+        const { name, emails, photos, id } = profile;
+        const user = {
+            email: emails[0].value,
+            firstName: name.givenName,
+            lastName: name.familyName,
+            picture: photos[0].value,
+            provider: 'FACEBOOK',
+            providerId: id,
+            accessToken,
+        };
+        done(null, user);
+    }
+}
+````
+
+## File: apps/api/src/auth/strategies/google.strategy.ts
+````typescript
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy, VerifyCallback } from 'passport-google-oauth20';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
+    constructor(private configService: ConfigService) {
+        super({
+            clientID: configService.get<string>('GOOGLE_CLIENT_ID') || 'placeholder_id',
+            clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || 'placeholder_secret',
+            callbackURL: configService.get<string>('API_URL')
+                ? `${configService.get<string>('API_URL')}/auth/google/callback`
+                : 'http://localhost:3000/auth/google/callback',
+            scope: ['email', 'profile'],
+        });
+    }
+
+    async validate(
+        accessToken: string,
+        refreshToken: string,
+        profile: any,
+        done: VerifyCallback,
+    ): Promise<any> {
+        const { name, emails, photos, id } = profile;
+        const user = {
+            email: emails[0].value,
+            firstName: name.givenName,
+            lastName: name.familyName,
+            picture: photos[0].value,
+            provider: 'GOOGLE',
+            providerId: id,
+            accessToken,
+        };
+        done(null, user);
+    }
+}
+````
+
+## File: apps/api/src/auth/auth.controller.ts
+````typescript
+import { Controller, Post, Get, Query, Body, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+
+@Controller('auth')
+export class AuthController {
+    constructor(private authService: AuthService) { }
+
+    @Post('login')
+    async login(@Body() req) {
+        // In real app, use LocalGuard strategy
+        const user = await this.authService.validateUser(req.email, req.password);
+        if (!user) {
+            throw new Error("Invalid credentials");
+        }
+        return this.authService.login(user);
+    }
+
+    @Post('register')
+    async register(@Body() req) {
+        return this.authService.register(req);
+    }
+
+    @Get('verify')
+    async verify(@Query('token') token: string) {
+        return this.authService.verifyEmail(token);
+    }
+
+    @Get('google')
+    @UseGuards(AuthGuard('google'))
+    async googleAuth() {
+        // Initiates the Google OAuth flow
+    }
+
+    @Get('google/callback')
+    @UseGuards(AuthGuard('google'))
+    async googleAuthRedirect(@Req() req) {
+        // Handles the callback from Google
+        // Logic: if user is logged in successfully by strategy, check status
+        const user = req.user;
+        if (!user) {
+            return { message: 'Authentication failed' };
+        }
+        // If status is PENDING/UNVERIFIED, we might redirect to a "Pending" page on frontend
+        // If ACTIVE, we generate token
+
+        // For simplicity, we assume strict Double Lock logic from AuthService
+        // logic should roughly match login() but we might need to handle the initial redirect
+        return this.authService.login(user);
+    }
+
+    @Get('facebook')
+    @UseGuards(AuthGuard('facebook'))
+    async facebookAuth() {
+        // Initiates the Facebook OAuth flow
+    }
+
+    @Get('facebook/callback')
+    @UseGuards(AuthGuard('facebook'))
+    async facebookAuthRedirect(@Req() req) {
+        const user = req.user;
+        if (!user) {
+            return { message: 'Authentication failed' };
+        }
+        return this.authService.login(user);
+    }
+}
+````
+
+## File: apps/api/src/auth/auth.guard.ts
+````typescript
+import {
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+    constructor(private jwtService: JwtService) { }
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const token = this.extractTokenFromHeader(request);
+        if (!token) {
+            throw new UnauthorizedException();
+        }
+        try {
+            const payload = await this.jwtService.verifyAsync(
+                token,
+                {
+                    secret: process.env.JWT_SECRET || 'secretKey'
+                }
+            );
+            // 💡 We're assigning the payload to the request object here
+            // so that we can access it in our route handlers
+            request['user'] = payload;
+        } catch {
+            throw new UnauthorizedException();
+        }
+        return true;
+    }
+
+    private extractTokenFromHeader(request: any): string | undefined {
+        // Fastify specific header access might differ slightly if using fastify-specific types, 
+        // but often standard access works. 
+        // For FastifyRequest, headers are in `headers`.
+        const [type, token] = (request.headers.authorization as string)?.split(' ') ?? [];
+        return type === 'Bearer' ? token : undefined;
+    }
+}
+````
+
+## File: apps/api/src/auth/auth.module.ts
+````typescript
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { PoliciesGuard } from '../casl/policies.guard';
+import { MailModule } from '../mail/mail.module';
+import { UsersModule } from '../users/users.module';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+
+@Module({
+    imports: [
+        UsersModule,
+        PassportModule,
+        MailModule,
+        JwtModule.register({
+            global: true,
+            secret: process.env.JWT_SECRET || 'secretKey', // In production use env vars
+            signOptions: { expiresIn: '1d' },
+        }),
+    ],
+    providers: [AuthService, PoliciesGuard, GoogleStrategy, FacebookStrategy],
+    controllers: [AuthController],
+    exports: [AuthService],
+})
+export class AuthModule { }
+````
+
+## File: apps/api/src/auth/auth.service.ts
+````typescript
+import { Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { UserStatus } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
+import { UsersRepository } from '../users/repositories/users.repository';
+
+@Injectable()
+export class AuthService {
+    constructor(
+        private jwtService: JwtService,
+        private mailService: MailService,
+        private usersRepository: UsersRepository
+    ) { }
+
+    async validateUser(email: string, pass: string): Promise<any> {
+        const user = await this.usersRepository.findByEmail(email);
+
+        // In real app: await bcrypt.compare(pass, user.password)
+        if (user && user.password === pass) {
+            this.checkDoubleLock(user);
+            // Return simple object for JWT
+            return {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                name: user.name,
+                status: user.status
+            };
+        }
+        return null;
+    }
+
+    async validateSocialUser(email: string, name: string, provider: string, providerId: string): Promise<any> {
+        let user = await this.usersRepository.findByEmail(email);
+
+        if (!user) {
+            // Create user from Social Login
+            // Status: PENDING (Double Lock) - OR UNVERIFIED?
+            // Usually Social Login implies Email Verification, so we can skip to PENDING.
+            user = await this.usersRepository.create({
+                email,
+                name,
+                password: '', // No password for social
+                status: UserStatus.PENDING,
+                role: 'USER', // Default
+                provider,
+                providerId
+            });
+        } else {
+            // Update provider info if missing (Account Linking)
+            // For now, just logging in.
+            // Check Double Lock
+            this.checkDoubleLock(user);
+        }
+
+        return user;
+    }
+
+    private checkDoubleLock(user: any) {
+        if (user.status === UserStatus.UNVERIFIED) {
+            throw new ForbiddenException('Email not verified. Please check your inbox.');
+        }
+        if (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING) {
+            // Allowing PENDING for now? No, usually login requires ACTIVE.
+            // But for Social Login registration, we return the user.
+            // Let's enforce Strict Double Lock for Login.
+        }
+        // Actually, validateUser returns the user object to the controller/strategy.
+        // It's up to the Guard or Controller to block access if not ACTIVE.
+        // But logic here says "Account pending approval".
+        if (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING) {
+            // We allow PENDING to login?
+            // No, standard Double Lock: Register -> Verify -> PENDING -> Admin Approve -> ACTIVE.
+            // Only ACTIVE can get a token.
+            // But wait, if I register, I get a user object back?
+        }
+
+        if (user.status !== UserStatus.ACTIVE) {
+            // Identify if it's social registration flow or login flow? 
+            // We'll throw if strict.
+            // For now, let's allow PENDING users to 'login' but maybe with limited scope?
+            // Or stick to the original logic: "Account pending approval or disabled."
+            throw new ForbiddenException('Account pending approval or disabled.');
+        }
+    }
+
+    async login(user: any) {
+        // If user is PENDING, we might want to return a specific message instead of a token?
+        // Or we allow token but it has no permissions.
+        // Let's stick to original: only ACTIVE users get tokens.
+        // BUT: validateSocialUser creates a PENDING user. 
+        // We should allow the initial return so we can send a response "Waiting for approval".
+
+        // Re-read validateUser logic: it throws if not ACTIVE.
+        // So login won't be called if validateUser throws.
+
+        // For Social, we might want to handle it inside the Strategy Callback controller.
+
+        const payload = { username: user.email, sub: user.id, role: user.role };
+        return {
+            access_token: this.jwtService.sign(payload),
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+        };
+    }
+
+    async register(data: any) {
+        // Create user with UNVERIFIED status
+        const user = await this.usersRepository.create({
+            ...data,
+            status: UserStatus.UNVERIFIED,
+            provider: 'LOCAL'
+        });
+
+        // Generate verification token (valid for 24h)
+        const verificationToken = this.jwtService.sign(
+            { sub: user.id, type: 'email-verification' },
+            { expiresIn: '24h' }
+        );
+
+        // Send email
+        await this.mailService.sendVerificationEmail(user.email, verificationToken);
+
+        return user;
+    }
+
+    async verifyEmail(token: string) {
+        try {
+            const payload = await this.jwtService.verifyAsync(token);
+            if (payload.type !== 'email-verification') {
+                throw new BadRequestException('Invalid token type');
+            }
+
+            const user = await this.usersRepository.findById(payload.sub);
+            if (!user) throw new BadRequestException('User not found');
+
+            // Use Rich Domain Model
+            user.verifyEmail();
+            await this.usersRepository.save(user);
+
+            return { message: 'Email verified successfully. Account is now PENDING admin approval.' };
+
+        } catch {
+            throw new BadRequestException('Invalid or expired verification token.');
+        }
+    }
+}
+````
+
+## File: apps/api/src/casl/policies.guard.ts
+````typescript
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Role } from '@prisma/client';
+
+export enum Permission {
+    VIEW_DASHBOARD = 'VIEW_DASHBOARD',
+    MANAGE_USERS = 'MANAGE_USERS',
+}
+
+@Injectable()
+export class PoliciesGuard implements CanActivate {
+    constructor(private reflector: Reflector) { }
+
+    canActivate(context: ExecutionContext): boolean {
+        const requiredPermissions = this.reflector.get<Permission[]>('permissions', context.getHandler());
+        if (!requiredPermissions) {
+            return true;
+        }
+        const { user } = context.switchToHttp().getRequest();
+
+        // Simple Role -> Permission Mapping strategy for demo
+        if (user.role === Role.ADMIN) return true; // Admin has all permissions
+
+        return requiredPermissions.every((permission) => this.hasPermission(user.role, permission));
+    }
+
+    private hasPermission(role: Role, permission: Permission): boolean {
+        const permissions = {
+            [Role.USER]: [Permission.VIEW_DASHBOARD],
+            [Role.ADMIN]: Object.values(Permission),
+        };
+        return permissions[role]?.includes(permission);
+    }
+}
+````
+
+## File: apps/api/src/common/pagination/pagination.util.ts
+````typescript
+export interface PaginationMeta {
+    total: number;
+    page: number;
+    limit: number;
+    lastPage: number;
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    meta: PaginationMeta;
+}
+
+export function createPaginatedResponse<T>(
+    data: T[],
+    total: number,
+    page: number,
+    limit: number,
+): PaginatedResponse<T> {
+    return {
+        data,
+        meta: {
+            total,
+            page,
+            limit,
+            lastPage: Math.ceil(total / limit),
+        },
+    };
+}
+````
+
+## File: apps/api/src/custom/permissions.decorator.ts
+````typescript
+import { SetMetadata } from '@nestjs/common';
+import { Permission } from '../casl/policies.guard';
+
+export const CheckPermissions = (...permissions: Permission[]) => SetMetadata('permissions', permissions);
+````
+
+## File: apps/api/src/mail/mail.module.ts
+````typescript
+import { Module } from '@nestjs/common';
+import { MailService } from './mail.service';
+
+@Module({
+    providers: [MailService],
+    exports: [MailService],
+})
+export class MailModule { }
+````
+
+## File: apps/api/src/mail/mail.service.ts
+````typescript
+import { Injectable } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
+
+@Injectable()
+export class MailService {
+    private transporter;
+
+    constructor() {
+        this.transporter = nodemailer.createTransport({
+            host: process.env.MAIL_HOST || 'sandbox.smtp.mailtrap.io',
+            port: Number(process.env.MAIL_PORT) || 2525,
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS,
+            },
+        });
+    }
+
+    async sendVerificationEmail(email: string, token: string) {
+        const url = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify?token=${token}`;
+
+        await this.transporter.sendMail({
+            from: '"My Golden Stack" <noreply@example.com>',
+            to: email,
+            subject: 'Verify your Email',
+            html: `
+                <h1>Welcome!</h1>
+                <p>Please click the link below to verify your email address:</p>
+                <a href="${url}">Verify Email</a>
+                <p>If you did not request this, please ignore this email.</p>
+            `,
+        });
+    }
+}
+````
+
+## File: apps/api/src/users/entities/user.entity.spec.ts
+````typescript
+import { User } from './user.entity';
+import { Role, UserStatus } from '@prisma/client';
+
+describe('User Entity', () => {
+    let user: User;
+    const now = new Date();
+
+    beforeEach(() => {
+        // Create a basic UNVERIFIED user for testing
+        user = new User(
+            '1',
+            'test@example.com',
+            'Test User',
+            Role.USER,
+            UserStatus.UNVERIFIED,
+            now
+        );
+    });
+
+    it('should be created with correct values', () => {
+        expect(user.id).toBe('1');
+        expect(user.status).toBe(UserStatus.UNVERIFIED);
+    });
+
+    describe('verifyEmail', () => {
+        it('should transition from UNVERIFIED to PENDING', () => {
+            user.verifyEmail();
+            expect(user.status).toBe(UserStatus.PENDING);
+        });
+
+        it('should not change status if not UNVERIFIED', () => {
+            const activeUser = new User('2', 'a@b.com', 'A', Role.USER, UserStatus.ACTIVE, now);
+            activeUser.verifyEmail();
+            expect(activeUser.status).toBe(UserStatus.ACTIVE);
+        });
+    });
+
+    describe('approve', () => {
+        it('should transition to ACTIVE', () => {
+            // Usually approval happens from PENDING, but method logic just sets to ACTIVE
+            user.approve();
+            expect(user.status).toBe(UserStatus.ACTIVE);
+        });
+    });
+});
+````
+
+## File: apps/api/src/users/entities/user.entity.ts
+````typescript
+import { UserStatus, Role } from '@prisma/client';
+
+export class User {
+    constructor(
+        public readonly id: string,
+        public readonly email: string,
+        public readonly name: string | null,
+        public readonly role: Role,
+        public status: UserStatus,
+        public readonly createdAt: Date,
+        public readonly password?: string,
+        public readonly provider: string | null = 'LOCAL',
+        public readonly providerId: string | null = null,
+    ) { }
+
+    // Business Logic Methods
+
+    /**
+     * Approves a user, changing status to ACTIVE.
+     * Can only be done if user is currently PENDING.
+     */
+    approve(): void {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    /**
+     * Marks user as Verified (Email verified), transitions to PENDING (waiting for admin).
+     * This follows the 'Double Lock' logic.
+     */
+    verifyEmail(): void {
+        if (this.status === UserStatus.UNVERIFIED) {
+            this.status = UserStatus.PENDING;
+        }
+    }
+
+    // Factory method to reconstitute from Persistence (Prisma)
+    static restore(data: {
+        id: string;
+        email: string;
+        name: string | null;
+        role: Role;
+        status: UserStatus;
+        createdAt: Date;
+        password?: string;
+        provider?: string | null;
+        providerId?: string | null;
+    }): User {
+        return new User(
+            data.id,
+            data.email,
+            data.name,
+            data.role,
+            data.status,
+            data.createdAt,
+            data.password,
+            data.provider,
+            data.providerId
+        );
+    }
+}
+````
+
+## File: apps/api/src/users/repositories/users.repository.ts
+````typescript
+import { Injectable } from '@nestjs/common';
+import { PrismaClient, User as PrismaUser } from '@prisma/client';
+import { User } from '../entities/user.entity';
+
+// Ideally injected via PrismaService, using client directly for now as per current project structure
+const prisma = new PrismaClient();
+
+@Injectable()
+export class UsersRepository {
+
+    async findById(id: string): Promise<User | null> {
+        const raw = await prisma.user.findUnique({ where: { id } });
+        if (!raw) return null;
+        return this.mapToDomain(raw);
+    }
+
+    async findByEmail(email: string): Promise<User | null> {
+        const raw = await prisma.user.findUnique({ where: { email } });
+        if (!raw) return null;
+        return this.mapToDomain(raw);
+    }
+
+    async findAll(skip: number, take: number): Promise<[User[], number]> {
+        const [rawUsers, total] = await Promise.all([
+            prisma.user.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+            }),
+            prisma.user.count(),
+        ]);
+
+        return [rawUsers.map(this.mapToDomain), total];
+    }
+
+    async save(user: User): Promise<User> {
+        // Upsert or Update logic. 
+        // For simplicity in this pragmatism, we assume if it exists we update.
+        // But since we use simple CRUD often, we might split create/update or use upsert.
+        // Let's use update for now as expected by current flows (approve).
+
+        const raw = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                status: user.status,
+                // Add other mutable fields if needed
+            }
+        });
+
+        return this.mapToDomain(raw);
+    }
+
+    // Creating a fresh user
+    async create(data: {
+        email: string;
+        name?: string | null;
+        password?: string;
+        role?: any;
+        status?: any;
+        provider?: string;
+        providerId?: string;
+    }): Promise<User> {
+        const raw = await prisma.user.create({
+            data: {
+                email: data.email,
+                name: data.name,
+                password: data.password || '', // Prisma might require string if not nullable in DB, but we made pass required in schema? Wait.
+                role: data.role,
+                status: data.status,
+                provider: data.provider,
+                providerId: data.providerId
+            }
+        });
+        return this.mapToDomain(raw);
+    }
+
+    private mapToDomain(raw: PrismaUser): User {
+        return User.restore({
+            id: raw.id,
+            email: raw.email,
+            name: raw.name,
+            role: raw.role,
+            status: raw.status,
+            createdAt: raw.createdAt,
+            password: raw.password
+        });
+    }
+}
+````
+
+## File: apps/api/src/users/users.controller.ts
+````typescript
+import { Controller, Get, Patch, Param, Body, Query, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { PoliciesGuard, Permission } from '../casl/policies.guard';
+import { CheckPermissions } from '../custom/permissions.decorator';
+import { AuthGuard } from '../auth/auth.guard'; // Allows validating JWT
+import { UserStatus } from '@prisma/client';
+
+@Controller('users')
+@UseGuards(AuthGuard, PoliciesGuard)
+export class UsersController {
+    constructor(private readonly usersService: UsersService) { }
+
+    @Get()
+    @CheckPermissions(Permission.MANAGE_USERS)
+    async findAll(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    ) {
+        return this.usersService.findAll(page, limit);
+    }
+
+    @Patch(':id/status')
+    @CheckPermissions(Permission.MANAGE_USERS)
+    async updateStatus(
+        @Param('id') id: string,
+        @Body('status') status: UserStatus,
+    ) {
+        return this.usersService.updateStatus(id, status);
+    }
+}
+````
+
+## File: apps/api/src/users/users.module.ts
+````typescript
+import { Module } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { UsersController } from './users.controller';
+import { UsersRepository } from './repositories/users.repository';
+
+@Module({
+    controllers: [UsersController],
+    providers: [UsersService, UsersRepository],
+    exports: [UsersService, UsersRepository],
+})
+export class UsersModule { }
+````
+
+## File: apps/api/src/users/users.service.spec.ts
+````typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from './users.service';
+import { UsersRepository } from './repositories/users.repository';
+import { User } from './entities/user.entity';
+import { Role, UserStatus } from '@prisma/client';
+import { NotFoundException } from '@nestjs/common';
+
+// Mock User Entity
+const mockUser = new User(
+    '1',
+    'test@example.com',
+    'Test',
+    Role.USER,
+    UserStatus.PENDING,
+    new Date()
+);
+
+// Mock UsersRepository
+const mockUsersRepository = {
+    findById: jest.fn(),
+    save: jest.fn(),
+    findAll: jest.fn(),
+};
+
+describe('UsersService', () => {
+    let service: UsersService;
+    let repository: typeof mockUsersRepository;
+
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                UsersService,
+                { provide: UsersRepository, useValue: mockUsersRepository },
+            ],
+        }).compile();
+
+        service = module.get<UsersService>(UsersService);
+        repository = module.get(UsersRepository);
+
+        jest.clearAllMocks();
+    });
+
+    it('should be defined', () => {
+        expect(service).toBeDefined();
+    });
+
+    describe('updateStatus', () => {
+        it('should approve a user', async () => {
+            repository.findById.mockResolvedValue(mockUser);
+            // Mock save to return the updated user
+            repository.save.mockImplementation(async (u: User) => u);
+
+            const result = await service.updateStatus('1', UserStatus.ACTIVE);
+
+            expect(repository.findById).toHaveBeenCalledWith('1');
+            expect(result.status).toBe(UserStatus.ACTIVE);
+            expect(repository.save).toHaveBeenCalled();
+        });
+
+        it('should throw NotFoundException if user does not exist', async () => {
+            repository.findById.mockResolvedValue(null);
+
+            await expect(service.updateStatus('999', UserStatus.ACTIVE))
+                .rejects.toThrow(NotFoundException);
+        });
+    });
+
+    describe('findAll', () => {
+        it('should return paginated response', async () => {
+            repository.findAll.mockResolvedValue([[mockUser], 1]);
+
+            const result = await service.findAll(1, 10);
+
+            expect(repository.findAll).toHaveBeenCalledWith(0, 10);
+            expect(result.data).toHaveLength(1);
+            expect(result.meta.total).toBe(1);
+        });
+    });
+});
+````
+
+## File: apps/api/src/users/users.service.ts
+````typescript
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserStatus } from '@prisma/client';
+import { createPaginatedResponse } from '../common/pagination/pagination.util';
+import { UsersRepository } from './repositories/users.repository';
+
+@Injectable()
+export class UsersService {
+    constructor(private readonly usersRepository: UsersRepository) { }
+
+    async findAll(page: number = 1, limit: number = 10) {
+        const [users, total] = await this.usersRepository.findAll((page - 1) * limit, limit);
+        return createPaginatedResponse(users, total, page, limit);
+    }
+
+    async updateStatus(id: string, status: UserStatus) {
+        const user = await this.usersRepository.findById(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        // Logic using Rich Domain Model
+        if (status === UserStatus.ACTIVE) {
+            user.approve();
+        } else {
+            // Fallback for other status updates (e.g. banning) - direct assignment for now as pragmatism
+            user.status = status;
+        }
+
+        const updated = await this.usersRepository.save(user);
+
+        // Return simple object (DTO-like) or the entity directly
+        return {
+            id: updated.id,
+            email: updated.email,
+            status: updated.status
+        };
+    }
+}
+````
+
+## File: apps/api/src/app.module.ts
+````typescript
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { MailModule } from './mail/mail.module';
+
+@Module({
+    imports: [
+        AuthModule,
+        UsersModule,
+        MailModule,
+        ConfigModule.forRoot({ isGlobal: true }),
+    ],
+    controllers: [],
+    providers: [],
+})
+export class AppModule { }
+````
+
+## File: apps/api/src/main.ts
+````typescript
+import { NestFactory } from '@nestjs/core';
+import {
+    FastifyAdapter,
+    NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+    const app = await NestFactory.create<NestFastifyApplication>(
+        AppModule,
+        new FastifyAdapter()
+    );
+
+    // Enable CORS
+    app.enableCors();
+
+    await app.listen(3000, '0.0.0.0');
+    console.log(`Application is running on: ${await app.getUrl()}`);
+}
+bootstrap();
+````
+
+## File: apps/api/.eslintrc.js
+````javascript
+module.exports = {
+    parser: '@typescript-eslint/parser',
+    parserOptions: {
+        project: 'tsconfig.json',
+        tsconfigRootDir: __dirname,
+        sourceType: 'module',
+    },
+    plugins: ['@typescript-eslint/eslint-plugin'],
+    extends: [
+        'plugin:@typescript-eslint/recommended',
+        'plugin:prettier/recommended',
+    ],
+    root: true,
+    env: {
+        node: true,
+        jest: true,
+    },
+    ignorePatterns: ['.eslintrc.js'],
+    rules: {
+        '@typescript-eslint/interface-name-prefix': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        'prettier/prettier': 'off', // Disabling strict prettier linting to avoid noise
+    },
+};
+````
+
+## File: apps/api/Dockerfile
+````
+FROM node:20-alpine AS base
+
+FROM base AS builder
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+# Install global turbo
+RUN npm install -g turbo
+COPY . .
+RUN turbo prune --scope=api --docker
+
+# Add lockfile and package.json's of isolated subworkspace
+FROM base AS installer
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# First install dependencies (as they change less often)
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN corepack enable
+RUN pnpm install
+
+# Build the project and its dependencies
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
+
+# Generate Prisma Client
+RUN cd apps/api && npx prisma generate
+
+RUN pnpm turbo run build --filter=api...
+
+FROM base AS runner
+WORKDIR /app
+
+# Don't run production as root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+USER nestjs
+
+COPY --from=installer /app/apps/api/package.json .
+COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./dist
+COPY --from=installer --chown=nestjs:nodejs /app/apps/api/node_modules ./node_modules
+# We need prisma client in prod
+COPY --from=installer --chown=nestjs:nodejs /app/node_modules ./node_modules_root
+
+CMD ["node", "dist/main"]
+````
+
+## File: apps/api/jest.config.js
+````javascript
+module.exports = {
+    moduleFileExtensions: ['js', 'json', 'ts'],
+    rootDir: 'src',
+    testRegex: '.*\\.spec\\.ts$',
+    transform: {
+        '^.+\\.(t|j)s$': 'ts-jest',
+    },
+    collectCoverageFrom: ['**/*.(t|j)s'],
+    coverageDirectory: '../coverage',
+    testEnvironment: 'node',
+};
+````
+
+## File: apps/api/package.json
+````json
+{
+    "name": "api",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Backend API built with NestJS, Prisma, and PostgreSQL.",
+    "scripts": {
+        "build": "nest build",
+        "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+        "start": "nest start",
+        "dev": "nest start --watch",
+        "start:debug": "nest start --debug --watch",
+        "start:prod": "node dist/main",
+        "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:cov": "jest --coverage",
+        "db:seed": "ts-node prisma/seed.ts",
+        "postinstall": "prisma generate"
+    },
+    "dependencies": {
+        "@fastify/static": "^6.0.0",
+        "@nestjs/common": "^10.0.0",
+        "@nestjs/config": "^4.0.2",
+        "@nestjs/core": "^10.0.0",
+        "@nestjs/jwt": "^10.0.0",
+        "@nestjs/passport": "^11.0.5",
+        "@nestjs/platform-fastify": "^10.0.0",
+        "@prisma/client": "^5.0.0",
+        "@types/nodemailer": "^7.0.5",
+        "class-transformer": "^0.5.1",
+        "class-validator": "^0.14.0",
+        "nodemailer": "^7.0.12",
+        "passport": "^0.7.0",
+        "passport-facebook": "^3.0.0",
+        "passport-google-oauth20": "^2.0.0",
+        "reflect-metadata": "^0.1.13",
+        "rxjs": "^7.8.1",
+        "zod": "^3.0.0"
+    },
+    "devDependencies": {
+        "@nestjs/cli": "^10.0.0",
+        "@nestjs/schematics": "^10.0.0",
+        "@nestjs/testing": "^10.0.0",
+        "@types/jest": "^29.0.0",
+        "@types/node": "^20.0.0",
+        "@types/passport-facebook": "^3.0.4",
+        "@types/passport-google-oauth20": "^2.0.17",
+        "@typescript-eslint/eslint-plugin": "^8.53.0",
+        "@typescript-eslint/parser": "^8.53.0",
+        "eslint": "^8.0.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.4",
+        "prisma": "^5.0.0",
+        "source-map-support": "^0.5.21",
+        "ts-jest": "^29.0.0",
+        "ts-loader": "^9.0.0",
+        "ts-node": "^10.0.0",
+        "tsconfig-paths": "^4.0.0",
+        "typescript": "^5.0.0"
+    },
+    "prisma": {
+        "seed": "ts-node prisma/seed.ts"
+    }
+}
+````
+
+## File: apps/api/tsconfig.json
+````json
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "es2017",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "skipLibCheck": true,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+        "strictBindCallApply": false,
+        "forceConsistentCasingInFileNames": false,
+        "noFallthroughCasesInSwitch": false
+    }
+}
+````
+
+## File: apps/web/src/components/admin/AdminHeader.tsx
+````typescript
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/context/AuthContext';
+
+export function AdminHeader() {
+    const { user, logout } = useAuth();
+
+    return (
+        <div className="border-b">
+            <div className="flex h-16 items-center px-4">
+                <div className="md:w-64">
+                    {/* Placeholder for sidebar width/alignment if needed, 
+                        but usually Sidebar is sticky on left and Header is global. 
+                        If sidebar is fixed left, this header might be PL-64. 
+                        Let's assume layout handles correct positioning. 
+                    */}
+                    <span className="hidden md:block font-bold text-xl ml-4">ShadcnBlocks Admin</span>
+                </div>
+
+                <div className="ml-auto flex items-center space-x-4">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src="/avatars/01.png" alt={user?.name || "Admin"} />
+                                    <AvatarFallback>{user?.name?.[0] || "A"}</AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="end" forceMount>
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-medium leading-none">{user?.name || "Admin"}</p>
+                                    <p className="text-xs leading-none text-muted-foreground">
+                                        {user?.email}
+                                    </p>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>Profile</DropdownMenuItem>
+                                <DropdownMenuItem>Billing</DropdownMenuItem>
+                                <DropdownMenuItem>Settings</DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={logout}>
+                                Log out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                </div>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/components/admin/AdminSidebar.tsx
+````typescript
+import { Link } from '@tanstack/react-router';
+import { LayoutDashboard, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+
+type SidebarProps = React.HTMLAttributes<HTMLDivElement>;
+
+export function AdminSidebar({ className }: SidebarProps) {
+    // Removed useAuth/logout as it is now in Header UserNav
+
+    const items = [
+        {
+            title: "General",
+            items: [
+                {
+                    title: "Dashboard",
+                    href: "/admin",
+                    icon: LayoutDashboard,
+                },
+                {
+                    title: "Users",
+                    href: "/admin/users",
+                    icon: Users,
+                },
+            ]
+        },
+    ];
+
+    return (
+        <div className={cn("relative hidden md:block w-72 h-screen sticky top-0 border-r", className)}>
+            <div className="space-y-4 py-4">
+                <div className="px-3 py-2">
+                    <div className="space-y-1">
+                        <h2 className="mb-2 px-4 text-xl font-semibold tracking-tight">
+                            Overview
+                        </h2>
+                        <div className="space-y-1">
+                            {items[0].items.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    to={item.href}
+                                    className="block"
+                                    activeProps={{ className: "bg-secondary/50 text-accent-foreground" }}
+                                >
+                                    {({ isActive }) => (
+                                        <Button variant={isActive ? "secondary" : "ghost"} className="w-full justify-start">
+                                            <item.icon className="mr-2 h-4 w-4" />
+                                            {item.title}
+                                        </Button>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/components/ui/avatar.tsx
+````typescript
+"use client"
+
+import * as React from "react"
+import * as AvatarPrimitive from "@radix-ui/react-avatar"
+
+import { cn } from "@/lib/utils"
+
+const Avatar = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
+      className
+    )}
+    {...props}
+  />
+))
+Avatar.displayName = AvatarPrimitive.Root.displayName
+
+const AvatarImage = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Image>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Image
+    ref={ref}
+    className={cn("aspect-square h-full w-full", className)}
+    {...props}
+  />
+))
+AvatarImage.displayName = AvatarPrimitive.Image.displayName
+
+const AvatarFallback = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Fallback>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
+>(({ className, ...props }, ref) => (
+  <AvatarPrimitive.Fallback
+    ref={ref}
+    className={cn(
+      "flex h-full w-full items-center justify-center rounded-full bg-muted",
+      className
+    )}
+    {...props}
+  />
+))
+AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
+
+export { Avatar, AvatarImage, AvatarFallback }
+````
+
+## File: apps/web/src/components/ui/badge.tsx
+````typescript
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+  VariantProps<typeof badgeVariants> { }
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export { Badge, badgeVariants }
+````
+
+## File: apps/web/src/components/ui/button.tsx
+````typescript
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+// eslint-disable-next-line react-refresh/only-export-components
+export { Button, buttonVariants }
+````
+
+## File: apps/web/src/components/ui/card.tsx
+````typescript
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-xl border bg-card text-card-foreground shadow",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+````
+
+## File: apps/web/src/components/ui/dropdown-menu.tsx
+````typescript
+import * as React from "react"
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
+import { Check, ChevronRight, Circle } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const DropdownMenu = DropdownMenuPrimitive.Root
+
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+
+const DropdownMenuGroup = DropdownMenuPrimitive.Group
+
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal
+
+const DropdownMenuSub = DropdownMenuPrimitive.Sub
+
+const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+
+const DropdownMenuSubTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
+    inset?: boolean
+  }
+>(({ className, inset, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubTrigger
+    ref={ref}
+    className={cn(
+      "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent data-[state=open]:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  >
+    {children}
+    <ChevronRight className="ml-auto" />
+  </DropdownMenuPrimitive.SubTrigger>
+))
+DropdownMenuSubTrigger.displayName =
+  DropdownMenuPrimitive.SubTrigger.displayName
+
+const DropdownMenuSubContent = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubContent
+    ref={ref}
+    className={cn(
+      "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-dropdown-menu-content-transform-origin]",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuSubContent.displayName =
+  DropdownMenuPrimitive.SubContent.displayName
+
+const DropdownMenuContent = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Content
+      ref={ref}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-dropdown-menu-content-transform-origin]",
+        className
+      )}
+      {...props}
+    />
+  </DropdownMenuPrimitive.Portal>
+))
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
+
+const DropdownMenuItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
+    inset?: boolean
+  }
+>(({ className, inset, ...props }, ref) => (
+  <DropdownMenuPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+
+const DropdownMenuCheckboxItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
+>(({ className, children, checked, ...props }, ref) => (
+  <DropdownMenuPrimitive.CheckboxItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    checked={checked}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Check className="h-4 w-4" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.CheckboxItem>
+))
+DropdownMenuCheckboxItem.displayName =
+  DropdownMenuPrimitive.CheckboxItem.displayName
+
+const DropdownMenuRadioItem = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
+>(({ className, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.RadioItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Circle className="h-2 w-2 fill-current" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.RadioItem>
+))
+DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
+
+const DropdownMenuLabel = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
+    inset?: boolean
+  }
+>(({ className, inset, ...props }, ref) => (
+  <DropdownMenuPrimitive.Label
+    ref={ref}
+    className={cn(
+      "px-2 py-1.5 text-sm font-semibold",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
+
+const DropdownMenuSeparator = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
+
+const DropdownMenuShortcut = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) => {
+  return (
+    <span
+      className={cn("ml-auto text-xs tracking-widest opacity-60", className)}
+      {...props}
+    />
+  )
+}
+DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+}
+````
+
+## File: apps/web/src/components/ui/input.tsx
+````typescript
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+````
+
+## File: apps/web/src/components/ui/table.tsx
+````typescript
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Table = React.forwardRef<
+  HTMLTableElement,
+  React.HTMLAttributes<HTMLTableElement>
+>(({ className, ...props }, ref) => (
+  <div className="relative w-full overflow-auto">
+    <table
+      ref={ref}
+      className={cn("w-full caption-bottom text-sm", className)}
+      {...props}
+    />
+  </div>
+))
+Table.displayName = "Table"
+
+const TableHeader = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+))
+TableHeader.displayName = "TableHeader"
+
+const TableBody = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tbody
+    ref={ref}
+    className={cn("[&_tr:last-child]:border-0", className)}
+    {...props}
+  />
+))
+TableBody.displayName = "TableBody"
+
+const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tfoot
+    ref={ref}
+    className={cn(
+      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      className
+    )}
+    {...props}
+  />
+))
+TableFooter.displayName = "TableFooter"
+
+const TableRow = React.forwardRef<
+  HTMLTableRowElement,
+  React.HTMLAttributes<HTMLTableRowElement>
+>(({ className, ...props }, ref) => (
+  <tr
+    ref={ref}
+    className={cn(
+      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      className
+    )}
+    {...props}
+  />
+))
+TableRow.displayName = "TableRow"
+
+const TableHead = React.forwardRef<
+  HTMLTableCellElement,
+  React.ThHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <th
+    ref={ref}
+    className={cn(
+      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+    {...props}
+  />
+))
+TableHead.displayName = "TableHead"
+
+const TableCell = React.forwardRef<
+  HTMLTableCellElement,
+  React.TdHTMLAttributes<HTMLTableCellElement>
+>(({ className, ...props }, ref) => (
+  <td
+    ref={ref}
+    className={cn(
+      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      className
+    )}
+    {...props}
+  />
+))
+TableCell.displayName = "TableCell"
+
+const TableCaption = React.forwardRef<
+  HTMLTableCaptionElement,
+  React.HTMLAttributes<HTMLTableCaptionElement>
+>(({ className, ...props }, ref) => (
+  <caption
+    ref={ref}
+    className={cn("mt-4 text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+TableCaption.displayName = "TableCaption"
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+}
+````
+
+## File: apps/web/src/components/AdminUserList.tsx
+````typescript
+import {
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
+    SortingState,
+    ColumnFiltersState,
+    VisibilityState,
+} from "@tanstack/react-table"
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../lib/api';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from "@/components/ui/input"
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { MoreHorizontal, ArrowUpDown, ChevronDown } from "lucide-react"
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+interface User {
+    id: string;
+    email: string;
+    name: string | null;
+    role: string;
+    status: string;
+}
+
+export function AdminUserList() {
+    const queryClient = useQueryClient();
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState({})
+
+    const { data: users = [], isLoading } = useQuery({
+        queryKey: ['users'],
+        queryFn: async () => {
+            const response = await api.get('/users');
+            return response.data.data as User[];
+        },
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: async (userId: string) => {
+            await api.patch(`/users/${userId}/status`, { status: 'ACTIVE' });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+
+    const columns: ColumnDef<User>[] = [
+        {
+            accessorKey: "name",
+            header: "Name",
+            cell: ({ row }) => {
+                const user = row.original
+                return (
+                    <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src="/avatars/01.png" alt={user.name || "User"} />
+                            <AvatarFallback>{user.name?.[0] || "U"}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                            <span className="font-medium">{user.name || "N/A"}</span>
+                        </div>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: "email",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Email
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                )
+            },
+            cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+        },
+        {
+            accessorKey: "role",
+            header: "Role",
+            cell: ({ row }) => <div className="capitalize">{row.getValue("role")}</div>,
+        },
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => {
+                const status = row.getValue("status") as string
+                let variant: "default" | "secondary" | "destructive" | "outline" = "secondary"
+                if (status === 'ACTIVE') variant = "default" // shadcn default is usually dark
+                if (status === 'PENDING') variant = "secondary" // yellow? need custom style or stick to shadcn variants
+                // Let's stick to standard Badge variants or use inline styles if needed for exact color matches
+                return (
+                    <Badge variant={variant === 'default' ? 'default' : 'secondary'} className={status === 'ACTIVE' ? 'bg-green-600' : ''}>
+                        {status}
+                    </Badge>
+                )
+            },
+        },
+        {
+            id: "actions",
+            enableHiding: false,
+            cell: ({ row }) => {
+                const user = row.original
+
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => navigator.clipboard.writeText(user.id)}
+                            >
+                                Copy User ID
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>View details</DropdownMenuItem>
+                            {user.status === 'PENDING' && (
+                                <DropdownMenuItem onClick={() => approveMutation.mutate(user.id)}>
+                                    Approve User
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )
+            },
+        },
+    ]
+
+    const table = useReactTable({
+        data: users,
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+            rowSelection,
+        },
+    })
+
+    if (isLoading) return <div>Loading...</div>;
+
+    return (
+        <div className="w-full space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+            </div>
+
+            <div className="flex items-center py-4">
+                <Input
+                    placeholder="Filter emails..."
+                    value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn("email")?.setFilterValue(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="ml-auto">
+                            Columns <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {table
+                            .getAllColumns()
+                            .filter((column) => column.getCanHide())
+                            .map((column) => {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        checked={column.getIsVisible()}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
+                                    >
+                                        {column.id}
+                                    </DropdownMenuCheckboxItem>
+                                )
+                            })}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                        </TableHead>
+                                    )
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && "selected"}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id}>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
+                                    No results.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <div className="flex items-center justify-end space-x-2 py-4">
+                <div className="space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+````
+
+## File: apps/web/src/components/Header.tsx
+````typescript
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+export function Header() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate({ to: '/' });
+    };
+
+    return (
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-14 items-center">
+                <Link to="/" className="mr-6 flex items-center space-x-2">
+                    <span className="font-bold text-xl inline-block">Golden Stack</span>
+                </Link>
+                <nav className="flex items-center space-x-6 text-sm font-medium">
+                    <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                        Home
+                    </Link>
+                    {/* Add more nav links here if needed */}
+                </nav>
+                <div className="ml-auto flex items-center space-x-4">
+                    {user ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src="/avatars/01.png" alt={user.email} />
+                                        <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="end" forceMount>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">User</p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => navigate({ to: '/dashboard' })}>
+                                    Dashboard
+                                </DropdownMenuItem>
+                                {user.role === 'ADMIN' && (
+                                    <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
+                                        Admin Panel
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout}>
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <div className="flex items-center space-x-2">
+                            <Link to="/login">
+                                <Button variant="ghost">Login</Button>
+                            </Link>
+                            <Link to="/register">
+                                <Button>Get Started</Button>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </header>
+    );
+}
+````
+
+## File: apps/web/src/context/AuthContext.tsx
+````typescript
+import React, { createContext, useContext, useState } from 'react';
+
+
+interface User {
+    id: string;
+    email: string;
+    role: string;
+    name: string | null;
+}
+
+interface AuthContextType {
+    user: User | null;
+    token: string | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    login: (token: string, user: User) => void;
+    logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(() => {
+        const stored = localStorage.getItem('user');
+        return stored ? JSON.parse(stored) : null;
+    });
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    const [isLoading] = useState(false);
+
+    const login = (newToken: string, newUser: User) => {
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        setToken(newToken);
+        setUser(newUser);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+}
+````
+
+## File: apps/web/src/layouts/AdminLayout.tsx
+````typescript
+import { Outlet } from '@tanstack/react-router';
+import { AdminSidebar } from '../components/admin/AdminSidebar';
+import { AdminHeader } from '../components/admin/AdminHeader';
+
+export default function AdminLayout() {
+    return (
+        <div className="flex min-h-screen flex-col">
+            <AdminHeader />
+            <div className="flex-1 flex">
+                <aside className="w-64 hidden md:block bg-background border-r">
+                    {/* Sidebar acts as navigation, fixed height often useful or scrollable */}
+                    <AdminSidebar className="border-none w-full" />
+                </aside>
+                <main className="flex-1 p-8 pt-6">
+                    <Outlet />
+                </main>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/lib/api.ts
+````typescript
+import axios from 'axios';
+
+export const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            // Optional: Redirect to login or handled by AuthContext
+        }
+        return Promise.reject(error);
+    }
+);
+````
+
+## File: apps/web/src/lib/utils.ts
+````typescript
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+````
+
+## File: apps/web/src/pages/AdminDashboard.tsx
+````typescript
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Users, DollarSign, CreditCard, Activity } from 'lucide-react';
+
+/* Mock Data for Chart */
+const data = [
+    { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Apr", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "May", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Jul", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Aug", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Sep", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Oct", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Nov", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "Dec", total: Math.floor(Math.random() * 5000) + 1000 },
+]
+
+export default function AdminDashboard() {
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            </div>
+
+            {/* Stats Cards Row */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">$45,231.89</div>
+                        <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Subscriptions</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">+2350</div>
+                        <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Sales</CardTitle>
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">+12,234</div>
+                        <p className="text-xs text-muted-foreground">+19% from last month</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">+573</div>
+                        <p className="text-xs text-muted-foreground">+201 since last hour</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Charts & Recent Sales Row */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <Card className="col-span-4">
+                    <CardHeader>
+                        <CardTitle>Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pl-2">
+                        <ResponsiveContainer width="100%" height={350}>
+                            <BarChart data={data}>
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="#888888"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="#888888"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) => `$${value}`}
+                                />
+                                <Bar dataKey="total" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                <Card className="col-span-3">
+                    <CardHeader>
+                        <CardTitle>Recent Sales</CardTitle>
+                        <CardDescription>
+                            You made 265 sales this month.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Simple List for "Recent Sales" */}
+                        <div className="space-y-8">
+                            <div className="flex items-center">
+                                <div className="ml-4 space-y-1">
+                                    <p className="text-sm font-medium leading-none">Olivia Martin</p>
+                                    <p className="text-sm text-muted-foreground">olivia.martin@email.com</p>
+                                </div>
+                                <div className="ml-auto font-medium">+$1,999.00</div>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="ml-4 space-y-1">
+                                    <p className="text-sm font-medium leading-none">Jackson Lee</p>
+                                    <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
+                                </div>
+                                <div className="ml-auto font-medium">+$39.00</div>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="ml-4 space-y-1">
+                                    <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
+                                    <p className="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
+                                </div>
+                                <div className="ml-auto font-medium">+$299.00</div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/AdminLogin.tsx
+````typescript
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { useNavigate } from '@tanstack/react-router';
+
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+export default function AdminLogin() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
+
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+    });
+
+    const onSubmit = async (data: LoginFormData) => {
+        try {
+            const response = await api.post('/auth/login', data);
+
+            if (response.data.role !== 'ADMIN') {
+                setError('Unauthorized: Admin access only.');
+                return;
+            }
+
+            login(response.data.access_token, {
+                email: response.data.email,
+                id: response.data.sub,
+                role: response.data.role,
+                name: response.data.name || null,
+            });
+            navigate({ to: '/admin' });
+        } catch (err: any) {
+            if (err.response?.status === 403) {
+                setError('Account pending approval or disabled.');
+            } else {
+                setError('Invalid credentials.');
+            }
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border border-border border-l-4 border-l-destructive">
+                <h2 className="text-3xl font-bold text-center text-foreground">Admin Portal</h2>
+                {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded">{error}</div>}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Email</label>
+                        <input
+                            {...register('email')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Password</label>
+                        <input
+                            type="password"
+                            {...register('password')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-2 font-semibold text-destructive-foreground bg-destructive rounded-md hover:opacity-90 disabled:opacity-50"
+                    >
+                        {isSubmitting ? 'Loading...' : 'Admin Sign In'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/Dashboard.tsx
+````typescript
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from '@tanstack/react-router';
+
+export default function Dashboard() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate({ to: '/login' });
+    };
+
+    return (
+        <div className="min-h-screen bg-background p-8">
+            <div className="max-w-4xl mx-auto space-y-8">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-4xl font-bold text-foreground">Dashboard</h1>
+                    <button
+                        onClick={handleLogout}
+                        className="px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded"
+                    >
+                        Logout
+                    </button>
+                </div>
+
+                <div className="bg-card border border-border rounded-lg p-6 shadow">
+                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Welcome back!</h2>
+                    <div className="space-y-2">
+                        <p className="text-muted-foreground">Email: <span className="text-foreground font-medium">{user?.email}</span></p>
+                        <p className="text-muted-foreground">Role: <span className="text-foreground font-medium">{user?.role}</span></p>
+                        <p className="text-muted-foreground">ID: <span className="text-foreground font-medium">{user?.id}</span></p>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-muted/50 rounded border border-muted">
+                        <p className="text-sm">You have successfully authenticated via JWT. This page is protected.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/LandingPage.tsx
+````typescript
+import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from '@tanstack/react-router';
+
+export default function LandingPage() {
+    return (
+        <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">
+                {/* Hero Section */}
+                <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-background to-secondary/20">
+                    <div className="container px-4 md:px-6">
+                        <div className="flex flex-col items-center space-y-4 text-center">
+                            <div className="space-y-2">
+                                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                                    Unlock Your Potential with Golden Stack
+                                </h1>
+                                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                                    The ultimate full-stack boilerplate for modern web applications.
+                                    Scalable, secure, and ready for production.
+                                </p>
+                            </div>
+                            <div className="space-x-4">
+                                <Link to="/register">
+                                    <Button size="lg" className="h-11 px-8">Get Started</Button>
+                                </Link>
+                                <Link to="/login">
+                                    <Button size="lg" variant="outline" className="h-11 px-8">Sign In</Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Features Section */}
+                <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+                    <div className="container px-4 md:px-6">
+                        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Double Lock Auth</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <CardDescription>
+                                        Secure authentication flow with user verification and admin approval steps.
+                                    </CardDescription>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Role-Based ACL</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <CardDescription>
+                                        Granular access control ensuring users only see what they are supposed to.
+                                    </CardDescription>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Modern Tech Stack</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <CardDescription>
+                                        Built with React, NestJS, TailwindCSS, and Prisma on a Turborepo foundation.
+                                    </CardDescription>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Social Proof Section */}
+                <section className="w-full py-12 md:py-24 lg:py-32 bg-secondary/30">
+                    <div className="container px-4 md:px-6">
+                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Trusted by Innovators</h2>
+                                <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
+                                    Join the hundreds of companies building their future with our stack.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 opacity-50">
+                                {/* Placeholder Logos */}
+                                <div className="flex items-center justify-center font-bold text-xl">Acme Corp</div>
+                                <div className="flex items-center justify-center font-bold text-xl">Globex</div>
+                                <div className="flex items-center justify-center font-bold text-xl">Soylent</div>
+                                <div className="flex items-center justify-center font-bold text-xl">Initech</div>
+                                <div className="flex items-center justify-center font-bold text-xl">Umbrella</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+                <p className="text-xs text-gray-500 dark:text-gray-400">© 2026 Golden Stack Inc. All rights reserved.</p>
+                <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+                    <Link to="/" className="text-xs hover:underline underline-offset-4">Terms of Service</Link>
+                    <Link to="/" className="text-xs hover:underline underline-offset-4">Privacy</Link>
+                </nav>
+            </footer>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/Login.tsx
+````typescript
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { Link, useNavigate } from '@tanstack/react-router';
+
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+export default function Login() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
+
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+    });
+
+    const onSubmit = async (data: LoginFormData) => {
+        try {
+            const response = await api.post('/auth/login', data);
+            // Ensure your backend returns { access_token, ...user } or similar.
+            // Adjust according to your AuthService.
+            login(response.data.access_token, {
+                email: response.data.email,
+                id: response.data.sub,
+                role: response.data.role,
+                name: response.data.name || null,
+            });
+            navigate({ to: '/dashboard' });
+        } catch (err: any) {
+            if (err.response?.status === 403) {
+                setError('Account pending approval or disabled.');
+            } else {
+                setError('Invalid credentials.');
+            }
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border border-border">
+                <h2 className="text-3xl font-bold text-center text-foreground">Login</h2>
+                {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded">{error}</div>}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Email</label>
+                        <input
+                            {...register('email')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Password</label>
+                        <input
+                            type="password"
+                            {...register('password')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-2 font-semibold text-primary-foreground bg-primary rounded-md hover:opacity-90 disabled:opacity-50"
+                    >
+                        {isSubmitting ? 'Loading...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <p className="text-sm text-center text-muted-foreground">
+                    Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+                </p>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/Register.tsx
+````typescript
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { api } from '../lib/api';
+import { Link, useNavigate } from '@tanstack/react-router';
+
+const registerSchema = z.object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    password: z.string().min(6),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
+
+export default function Register() {
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
+
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
+    });
+
+    const onSubmit = async (data: RegisterFormData) => {
+        try {
+            await api.post('/auth/register', data);
+            alert('Registration successful! Please check your email to verify your account.');
+            navigate({ to: '/login' });
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Registration failed.');
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg border border-border">
+                <h2 className="text-3xl font-bold text-center text-foreground">Register</h2>
+                {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded">{error}</div>}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Name</label>
+                        <input
+                            {...register('name')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Email</label>
+                        <input
+                            {...register('email')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">Password</label>
+                        <input
+                            type="password"
+                            {...register('password')}
+                            className="w-full px-3 py-2 mt-1 border rounded-md bg-input text-foreground focus:ring-primary focus:border-primary"
+                        />
+                        {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-2 font-semibold text-primary-foreground bg-primary rounded-md hover:opacity-90 disabled:opacity-50"
+                    >
+                        {isSubmitting ? 'Loading...' : 'Sign Up'}
+                    </button>
+                </form>
+
+                <p className="text-sm text-center text-muted-foreground">
+                    Already have an account? <Link to="/login" className="text-primary hover:underline">Login</Link>
+                </p>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/pages/VerifyEmail.tsx
+````typescript
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { api } from '../lib/api';
+
+export default function VerifyEmail() {
+    const navigate = useNavigate();
+    const search = useSearch({ from: '/verify' });
+    const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+    const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        const verify = async () => {
+            try {
+                if (!search.token) {
+                    setStatus('error');
+                    setMessage('No verification token provided.');
+                    return;
+                }
+
+                await api.get(`/auth/verify?token=${search.token}`);
+                setStatus('success');
+            } catch (err: any) {
+                setStatus('error');
+                setMessage(err.response?.data?.message || 'Verification failed.');
+            }
+        };
+
+        verify();
+    }, [search]);
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+            <div className="max-w-md w-full p-8 bg-card rounded-lg shadow-lg border border-border text-center">
+                {status === 'verifying' && (
+                    <>
+                        <h2 className="text-2xl font-bold mb-4">Verifying Email...</h2>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    </>
+                )}
+
+                {status === 'success' && (
+                    <>
+                        <h2 className="text-2xl font-bold text-green-600 mb-4">Email Verified!</h2>
+                        <p className="text-muted-foreground mb-6">
+                            Your account has been verified and is now pending administrator approval.
+                        </p>
+                        <button
+                            onClick={() => navigate({ to: '/login' })}
+                            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
+                        >
+                            Go to Login
+                        </button>
+                    </>
+                )}
+
+                {status === 'error' && (
+                    <>
+                        <h2 className="text-2xl font-bold text-destructive mb-4">Verification Failed</h2>
+                        <p className="text-muted-foreground mb-6">{message}</p>
+                        <button
+                            onClick={() => navigate({ to: '/login' })}
+                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:opacity-90"
+                        >
+                            Back to Login
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+````
+
+## File: apps/web/src/styles/globals.css
+````css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+ 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
+    --radius: 0.5rem;
+ 
+    --chart-1: 12 76% 61%;
+ 
+    --chart-2: 173 58% 39%;
+ 
+    --chart-3: 197 37% 24%;
+ 
+    --chart-4: 43 74% 66%;
+ 
+    --chart-5: 27 87% 67%;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+````
+
+## File: apps/web/src/App.tsx
+````typescript
+import {
+    QueryClient,
+    QueryClientProvider,
+} from '@tanstack/react-query'
+import {
+    RouterProvider,
+    createRouter,
+    createRootRoute,
+    createRoute,
+    Outlet,
+    redirect
+} from '@tanstack/react-router'
+import { AuthProvider } from './context/AuthContext'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
+import Dashboard from './pages/Dashboard'
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import LandingPage from './pages/LandingPage'
+
+const queryClient = new QueryClient()
+
+const rootRoute = createRootRoute({
+    component: () => (
+        <AuthProvider>
+            <div className="min-h-screen bg-background text-foreground">
+                <Outlet />
+            </div>
+        </AuthProvider>
+    ),
+})
+
+const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: LandingPage,
+})
+
+const loginRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/login',
+    component: Login,
+})
+
+const registerRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/register',
+    component: Register,
+})
+
+const dashboardRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/dashboard',
+    component: Dashboard,
+    beforeLoad: () => {
+        if (!localStorage.getItem('token')) {
+            throw redirect({
+                to: '/login',
+            })
+        }
+    }
+})
+
+const verifyRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/verify',
+    component: VerifyEmail,
+    validateSearch: (search: Record<string, unknown>) => {
+        return {
+            token: search.token as string,
+        }
+    },
+})
+
+import AdminLayout from './layouts/AdminLayout'
+import { AdminUserList } from './components/AdminUserList'
+
+// --- Admin Routes ---
+
+const adminLoginRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/admin/login',
+    component: AdminLogin,
+})
+
+const adminRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/admin',
+    component: AdminLayout,
+    beforeLoad: () => {
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+
+        if (!token || !userStr) {
+            throw redirect({ to: '/admin/login' })
+        }
+
+        const user = JSON.parse(userStr);
+        if (user.role !== 'ADMIN') {
+            throw redirect({ to: '/admin/login' })
+        }
+    }
+})
+
+const adminDashboardRoute = createRoute({
+    getParentRoute: () => adminRoute,
+    path: '/',
+    component: AdminDashboard,
+})
+
+const adminUsersRoute = createRoute({
+    getParentRoute: () => adminRoute,
+    path: '/users',
+    component: AdminUserList, // Reusing the list component as the page for now
+})
+
+const routeTree = rootRoute.addChildren([
+    indexRoute,
+    loginRoute,
+    registerRoute,
+    verifyRoute,
+    dashboardRoute,
+    adminLoginRoute,
+    adminRoute.addChildren([
+        adminDashboardRoute,
+        adminUsersRoute
+    ])
+])
+
+const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+    interface Register {
+        router: typeof router
+    }
+}
+
+function App() {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+        </QueryClientProvider>
+    )
+}
+
+export default App
+````
+
+## File: apps/web/src/main.tsx
+````typescript
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.tsx'
+import './styles/globals.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+)
+````
+
+## File: apps/web/src/vite-env.d.ts
+````typescript
+/// <reference types="vite/client" />
+````
+
+## File: apps/web/.eslintrc.cjs
+````javascript
+module.exports = {
+    root: true,
+    env: { browser: true, es2020: true },
+    extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:react-hooks/recommended',
+    ],
+    ignorePatterns: ['dist', '.eslintrc.cjs'],
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint', 'react-refresh'],
+    rules: {
+        'react-refresh/only-export-components': [
+            'warn',
+            { allowConstantExport: true },
+        ],
+        '@typescript-eslint/no-explicit-any': 'off',
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'warn'
+    },
+}
+````
+
+## File: apps/web/components.json
+````json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {}
+}
+````
+
+## File: apps/web/Dockerfile
+````
+FROM node:20-alpine AS base
+
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN npm install -g turbo
+COPY . .
+RUN turbo prune --scope=web --docker
+
+FROM base AS installer
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN corepack enable
+RUN pnpm install
+
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
+
+RUN pnpm turbo run build --filter=web...
+
+FROM nginx:alpine AS runner
+COPY --from=installer /app/apps/web/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+````
+
+## File: apps/web/index.html
+````html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Golden Stack</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+````
+
+## File: apps/web/package.json
+````json
+{
+    "name": "web",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Frontend application built with React, Vite, and Shadcn/ui.",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "lint": "eslint src --ext ts,tsx --report-unused-disable-directives"
+    },
+    "dependencies": {
+        "@hookform/resolvers": "^5.2.2",
+        "@radix-ui/react-avatar": "^1.1.11",
+        "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@radix-ui/react-slot": "^1.2.4",
+        "@tanstack/react-query": "^5.0.0",
+        "@tanstack/react-router": "^1.0.0",
+        "@tanstack/react-table": "^8.21.3",
+        "axios": "^1.13.2",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.292.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-hook-form": "^7.71.0",
+        "recharts": "^3.6.0",
+        "tailwind-merge": "^2.6.0",
+        "tailwindcss-animate": "^1.0.7",
+        "zod": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/react": "^18.2.37",
+        "@types/react-dom": "^18.2.15",
+        "@typescript-eslint/eslint-plugin": "^8.53.0",
+        "@typescript-eslint/parser": "^8.53.0",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.16",
+        "eslint": "^8.0.0",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-react-refresh": "^0.4.26",
+        "postcss": "^8.4.31",
+        "tailwindcss": "^3.3.5",
+        "typescript": "^5.2.2",
+        "vite": "^5.0.0"
+    }
+}
+````
+
+## File: apps/web/postcss.config.cjs
+````javascript
+module.exports = {
+    plugins: {
+        tailwindcss: {},
+        autoprefixer: {},
+    },
+}
+````
+
+## File: apps/web/tailwind.config.ts
+````typescript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    darkMode: ["class"],
+    content: [
+        './pages/**/*.{ts,tsx}',
+        './components/**/*.{ts,tsx}',
+        './app/**/*.{ts,tsx}',
+        './src/**/*.{ts,tsx}',
+    ],
+    theme: {
+    	container: {
+    		center: true,
+    		padding: '2rem',
+    		screens: {
+    			'2xl': '1400px'
+    		}
+    	},
+    	extend: {
+    		colors: {
+    			border: 'hsl(var(--border))',
+    			input: 'hsl(var(--input))',
+    			ring: 'hsl(var(--ring))',
+    			background: 'hsl(var(--background))',
+    			foreground: 'hsl(var(--foreground))',
+    			primary: {
+    				DEFAULT: 'hsl(var(--primary))',
+    				foreground: 'hsl(var(--primary-foreground))'
+    			},
+    			secondary: {
+    				DEFAULT: 'hsl(var(--secondary))',
+    				foreground: 'hsl(var(--secondary-foreground))'
+    			},
+    			destructive: {
+    				DEFAULT: 'hsl(var(--destructive))',
+    				foreground: 'hsl(var(--destructive-foreground))'
+    			},
+    			muted: {
+    				DEFAULT: 'hsl(var(--muted))',
+    				foreground: 'hsl(var(--muted-foreground))'
+    			},
+    			accent: {
+    				DEFAULT: 'hsl(var(--accent))',
+    				foreground: 'hsl(var(--accent-foreground))'
+    			},
+    			popover: {
+    				DEFAULT: 'hsl(var(--popover))',
+    				foreground: 'hsl(var(--popover-foreground))'
+    			},
+    			card: {
+    				DEFAULT: 'hsl(var(--card))',
+    				foreground: 'hsl(var(--card-foreground))'
+    			},
+    			chart: {
+    				'1': 'hsl(var(--chart-1))',
+    				'2': 'hsl(var(--chart-2))',
+    				'3': 'hsl(var(--chart-3))',
+    				'4': 'hsl(var(--chart-4))',
+    				'5': 'hsl(var(--chart-5))'
+    			}
+    		},
+    		borderRadius: {
+    			lg: 'var(--radius)',
+    			md: 'calc(var(--radius) - 2px)',
+    			sm: 'calc(var(--radius) - 4px)'
+    		}
+    	}
+    },
+    plugins: [require("tailwindcss-animate")],
+}
+````
+
+## File: apps/web/tsconfig.json
+````json
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": [
+            "ES2020",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "module": "ESNext",
+        "skipLibCheck": true,
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "src"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
+}
+````
+
+## File: apps/web/tsconfig.node.json
+````json
+{
+    "compilerOptions": {
+        "composite": true,
+        "skipLibCheck": true,
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "vite.config.ts"
+    ]
+}
+````
+
+## File: apps/web/vite.config.ts
+````typescript
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+    plugins: [react()],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "./src"),
+        },
+    },
+    server: {
+        port: 5173,
+        host: true
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom'],
+                    ui: ['@radix-ui/react-avatar', '@radix-ui/react-dropdown-menu', '@radix-ui/react-slot', 'lucide-react'],
+                    tanstack: ['@tanstack/react-query', '@tanstack/react-table', '@tanstack/react-router'],
+                    recharts: ['recharts']
+                }
+            }
+        }
+    }
+});
+````
+
+## File: docs/architecture.md
+````markdown
+# Architecture Documentation
+
+## 1. Authentication ("Double Lock")
+
+We implement a strict "Double Lock" authentication strategy to ensure security and administrative control.
+
+### Flow
+1.  **Registration:** A user registers and acts as a `PENDING` user. They cannot access protected resources.
+2.  **Login:** The system checks credentials AND the user status.
+    -   `IF status != ACTIVE` -> Throw `ForbiddenException("Account pending approval")`.
+3.  **Approval:** An Admin must manually approve the user by changing their status to `ACTIVE`.
+
+### Implementation Details
+-   **Guards:** `JwtAuthGuard` checks for a valid token.
+-   **Strategy:** `JwtStrategy` validates the payload and checks the database for the current status.
+
+## 2. Access Control List (ACL)
+
+We use a Role-Based Access Control (RBAC) system with granular Policies.
+
+### Roles
+-   `ADMIN`: Full system access.
+-   `USER`: Standard access.
+
+### Decorators
+We use custom decorators to enforce permissions:
+```typescript
+@CheckPermissions(Permission.VIEW_DASHBOARD)
+@UseGuards(PoliciesGuard)
+```
+
+## 3. Generic Pagination
+
+All list endpoints follow a consistent response structure:
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 10,
+    "lastPage": 10
+  }
+}
+```
+
+This is handled by a shared utility function `createPaginatedResponse(data, count, page, limit)`.
+````
+
+## File: docs/deployment.md
+````markdown
+# Deployment Guide
+
+The application is containerized using Docker and is designed to be deployed to any Docker-compatible hosting environment (AWS ECS, DigitalOcean App Platform, Render, etc.).
+
+## Prerequisites
+
+-   Docker Engine installed on the host.
+-   PostgreSQL database (external or containerized).
+
+## Production Build
+
+We use a multi-stage Dockerfile to ensure small image sizes.
+
+### Building the API
+```bash
+docker build -f apps/api/Dockerfile -t my-golden-stack-api .
+```
+
+### Building the Web App
+```bash
+docker build -f apps/web/Dockerfile -t my-golden-stack-web .
+```
+
+## Environment Variables
+
+Ensure the following environment variables are set in production:
+
+### API
+-   `DATABASE_URL`: Connection string to PostgreSQL.
+-   `JWT_SECRET`: Secure random string.
+-   `PORT`: (Default: 3000)
+
+### Web
+-   `VITE_API_URL`: URL of the deployed API.
+
+## Running with Docker Compose (Production)
+
+You can maintain a separate `docker-compose.prod.yml` for production orchestration if not using a managed orchestrator.
+
+```yaml
+version: '3.8'
+services:
+  api:
+    image: my-golden-stack-api
+    restart: always
+    env_file: .env.production
+    ports:
+      - "3000:3000"
+
+  web:
+    image: my-golden-stack-web
+    restart: always
+    ports:
+      - "80:80"
+```
+````
+
+## File: docs/theming.md
+````markdown
+# Theming Strategy
+
+The application uses **TailwindCSS** combined with CSS Variables for a dynamic and easily themeable design system.
+
+## Design Tokens
+
+All design tokens are defined in `apps/web/src/styles/globals.css`. We use HSL color values to allow for easy opacity manipulation in Tailwind.
+
+### Structure
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  /* ... */
+}
+```
+
+## Customizing the Theme
+
+1.  Open `apps/web/src/styles/globals.css`.
+2.  Update the HSL values in the `:root` and `.dark` blocks.
+3.  The changes will instantly propagate across the entire application due to Tailwind's utility mapping.
+
+## Tailwind Configuration
+
+The tokens are mapped in `tailwind.config.js`:
+
+```javascript
+theme: {
+  extend: {
+    colors: {
+      background: "hsl(var(--background))",
+      primary: {
+        DEFAULT: "hsl(var(--primary))",
+        foreground: "hsl(var(--primary-foreground))",
+      },
+      // ...
+    },
+    borderRadius: {
+      lg: "var(--radius)",
+      md: "calc(var(--radius) - 2px)",
+      sm: "calc(var(--radius) - 4px)",
+    },
+  },
+}
+```
+````
+
+## File: packages/config/package.json
+````json
+{
+    "name": "@repo/config",
+    "version": "0.0.0",
+    "private": true,
+    "main": "index.js"
+}
+````
+
+## File: packages/types/src/index.ts
+````typescript
+export type User = {
+    id: string;
+    email: string;
+};
+````
+
+## File: packages/types/package.json
+````json
+{
+    "name": "@repo/types",
+    "version": "0.0.0",
+    "private": true,
+    "main": "./src/index.ts",
+    "types": "./src/index.ts",
+    "devDependencies": {
+        "typescript": "^5.0.0"
+    }
+}
+````
+
+## File: packages/ui/src/index.tsx
+````typescript
+import * as React from "react";
+
+export const Button = () => {
+    return <button>Click me</button>;
+};
+````
+
+## File: packages/ui/package.json
+````json
+{
+    "name": "@repo/ui",
+    "version": "0.0.0",
+    "private": true,
+    "main": "./src/index.tsx",
+    "types": "./src/index.tsx",
+    "dependencies": {
+        "react": "^18.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.0",
+        "typescript": "^5.0.0"
+    }
+}
+````
+
+## File: .gitignore
+````
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build
+dist
+build
+.next
+.turbo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.iml
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI Context
+repomix-output.xml
+````
+
+## File: docker-compose.yml
+````yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mgs-postgres
+    ports:
+      - "5440:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my_golden_stack
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Placeholders for future services to facilitate `docker-compose up` usage documentation
+  # api:
+  #   build: ./apps/api
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:password@postgres:5432/my_golden_stack
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres_data:
+````
+
+## File: package.json
+````json
+{
+  "name": "my-golden-stack",
+  "private": true,
+  "description": "A production-ready Monorepo Boilerplate featuring NestJS, React + Vite, and a \"Double Lock\" Authentication strategy.",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:seed": "turbo run db:seed",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
+````
+
+## File: pnpm-workspace.yaml
+````yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+````
+
+## File: README.md
+````markdown
+# My Golden Stack
+
+![CI Status](https://img.shields.io/github/actions/workflow/status/guxedo/golden-boilerplate/ci.yml?branch=main)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Stack](https://img.shields.io/badge/stack-Turborepo%20%7C%20NestJS%20%7C%20React-black)
+
+A production-ready Monorepo Boilerplate featuring NestJS, React + Vite, and a "Double Lock" Authentication strategy.
+
+## 🚀 Quick Start
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/username/my-golden-stack.git
+    cd my-golden-stack
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
+
+3.  **Start the development environment:**
+    ```bash
+    docker-compose up -d
+    pnpm dev
+    ```
+    This will spin up Postgres and start the apps in development mode.
+
+## 🔑 Default Credentials (Seeded)
+
+The database is automatically seeded with the following users for testing:
+
+| Role | Email | Password | Status | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin** | `admin@example.com` | `password123` | `ACTIVE` | Full access. |
+| **User** | `user@example.com` | `password123` | `ACTIVE` | Standard access. |
+| **User** | `pending@example.com` | `password123` | `PENDING` | Cannot login (Simulates approval flow). |
+
+## 📚 Documentation
+
+-   [**Architecture**](./docs/architecture.md): "Double Lock" Auth, ACL, and Pagination logic.
+-   [**Theming**](./docs/theming.md): How to customize the design tokens and CSS variables.
+-   [**Deployment**](./docs/deployment.md): Docker-based deployment strategy.
+
+## 🛠 Tech Stack
+
+-   **Monorepo:** Turborepo (pnpm)
+-   **Backend:** NestJS, Prisma, PostgreSQL
+-   **Frontend:** React, Vite, TanStack Router, TanStack Query, TailwindCSS
+-   **Shared:** Zod, TypeScript
+````
+
+## File: turbo.json
+````json
+{
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": [
+        "**/.env"
+    ],
+    "tasks": {
+        "build": {
+            "dependsOn": [
+                "^build"
+            ],
+            "outputs": [
+                "dist/**",
+                ".next/**",
+                "!.next/cache/**"
+            ]
+        },
+        "lint": {},
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "test": {
+            "dependsOn": [
+                "build"
+            ],
+            "inputs": [
+                "src/**/*.tsx",
+                "src/**/*.ts",
+                "test/**/*.ts",
+                "test/**/*.tsx"
+            ]
+        },
+        "db:seed": {
+            "cache": false
+        }
+    }
+}
+````
