@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { UserStatus } from '@prisma/client';
 import { createPaginatedResponse } from '../common/pagination/pagination.util';
 import { UsersRepository } from './repositories/users.repository';
@@ -45,5 +45,22 @@ export class UsersService {
             name: updated.name,
             email: updated.email
         };
+    }
+
+    async updatePassword(id: string, dto: { currentPassword: string, newPassword: string }) {
+        const user = await this.usersRepository.findById(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        // Validate current password (Plain text for now as per boilerplate/AuthService)
+        if (user.password !== dto.currentPassword) {
+            // Check current password logic. 
+            // If user has no password (social login?), this might fail.
+            throw new ForbiddenException('Invalid current password');
+        }
+
+        user.password = dto.newPassword;
+        await this.usersRepository.save(user);
+
+        return { message: 'Password updated successfully' };
     }
 }

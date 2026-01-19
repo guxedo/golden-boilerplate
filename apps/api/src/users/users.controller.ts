@@ -1,6 +1,7 @@
 import { Controller, Get, Patch, Param, Body, Query, UseGuards, ParseIntPipe, DefaultValuePipe, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PoliciesGuard, Permission } from '../casl/policies.guard';
 import { CheckPermissions } from '../custom/permissions.decorator';
 import { AuthGuard } from '../auth/auth.guard'; // Allows validating JWT
@@ -23,6 +24,11 @@ export class UsersController {
     @Patch('profile')
     async updateProfile(@Req() req, @Body() body: UpdateProfileDto) {
         return this.usersService.updateProfile(req.user.sub, body.name);
+    }
+
+    @Patch('password')
+    async updatePassword(@Req() req, @Body() body: UpdatePasswordDto) {
+        return this.usersService.updatePassword(req.user.sub, body);
     }
 
     @Patch(':id/status')
