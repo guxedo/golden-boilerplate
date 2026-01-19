@@ -56,6 +56,9 @@ export function Header() {
                                 <DropdownMenuItem onClick={() => navigate({ to: '/dashboard' })}>
                                     Dashboard
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate({ to: '/notes' })}>
+                                    My Notes
+                                </DropdownMenuItem>
                                 {user.role === 'ADMIN' && (
                                     <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
                                         Admin Panel

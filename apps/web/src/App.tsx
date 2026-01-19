@@ -18,6 +18,9 @@ import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import LandingPage from './pages/LandingPage'
+import Notes from './pages/Notes'
+import AdminLayout from './layouts/AdminLayout'
+import { AdminUserList } from './components/AdminUserList'
 
 const queryClient = new QueryClient()
 
@@ -62,6 +65,19 @@ const dashboardRoute = createRoute({
     }
 })
 
+const notesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/notes',
+    component: Notes,
+    beforeLoad: () => {
+        if (!localStorage.getItem('token')) {
+            throw redirect({
+                to: '/login',
+            })
+        }
+    }
+})
+
 const verifyRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/verify',
@@ -72,9 +88,6 @@ const verifyRoute = createRoute({
         }
     },
 })
-
-import AdminLayout from './layouts/AdminLayout'
-import { AdminUserList } from './components/AdminUserList'
 
 // --- Admin Routes ---
 
@@ -112,7 +125,7 @@ const adminDashboardRoute = createRoute({
 const adminUsersRoute = createRoute({
     getParentRoute: () => adminRoute,
     path: '/users',
-    component: AdminUserList, // Reusing the list component as the page for now
+    component: AdminUserList,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -121,6 +134,7 @@ const routeTree = rootRoute.addChildren([
     registerRoute,
     verifyRoute,
     dashboardRoute,
+    notesRoute,
     adminLoginRoute,
     adminRoute.addChildren([
         adminDashboardRoute,
