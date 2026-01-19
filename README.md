@@ -17,6 +17,7 @@ Our internal documentation is located in `apps/docs`.
 *   [**Backend Patterns**](./apps/docs/src/content/architecture/backend-patterns.md): Services, Pagination, and Error Handling.
 *   [**Frontend Architecture**](./apps/docs/src/content/architecture/frontend-patterns.md): Atoms, Hooks, and Server State.
 *   [**Database Design**](./apps/docs/src/content/architecture/database-design.md): Schema Diagrams and Migrations.
+*   [**AI Software Factory**](./apps/docs/src/content/blog/ai-software-factory-en.md): The Antigravity Flow Architecture.
 
 ### ⚡ Development
 *   [**Functional Specs**](./apps/docs/src/content/functional): Use Cases and Sequence Diagrams.
