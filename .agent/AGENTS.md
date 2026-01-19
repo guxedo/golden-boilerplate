@@ -11,3 +11,4 @@ This registry lists all available skills in the Golden Boilerplate ecosystem, al
 | **database-prisma** | Manages DB Schema & Migrations. | `Schema`, `Database`, `Model` |
 | **testing-quality** | Runs and writes tests. | `Test`, `TDD`, `Spec` |
 | **git-github-ops** | Manages Git branches, issues, and atomic commits. | `Start feature`, `Commit task`, `Merge` |
+| **documentation-architect** | Maintains Functional Docs (Use Cases/Sequences), Test Plans, and Architectural records. | `Document feature`, `Initial documentation pass` |
