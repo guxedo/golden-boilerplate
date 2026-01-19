@@ -4,11 +4,11 @@ export class User {
     constructor(
         public readonly id: string,
         public readonly email: string,
-        public readonly name: string | null,
+        public name: string | null,
         public readonly role: Role,
         public status: UserStatus,
         public readonly createdAt: Date,
-        public readonly password?: string,
+        public password?: string,
         public readonly provider: string | null = 'LOCAL',
         public readonly providerId: string | null = null,
     ) { }

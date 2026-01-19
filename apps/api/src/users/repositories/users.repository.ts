@@ -43,7 +43,8 @@ export class UsersRepository {
             where: { id: user.id },
             data: {
                 status: user.status,
-                // Add other mutable fields if needed
+                name: user.name,
+                password: user.password,
             }
         });
 

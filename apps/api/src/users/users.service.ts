@@ -26,11 +26,24 @@ export class UsersService {
 
         const updated = await this.usersRepository.save(user);
 
-        // Return simple object (DTO-like) or the entity directly
         return {
             id: updated.id,
             email: updated.email,
             status: updated.status
+        };
+    }
+
+    async updateProfile(id: string, name: string) {
+        const user = await this.usersRepository.findById(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        user.name = name;
+        const updated = await this.usersRepository.save(user);
+
+        return {
+            id: updated.id,
+            name: updated.name,
+            email: updated.email
         };
     }
 }
