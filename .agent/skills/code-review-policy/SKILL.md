@@ -58,4 +58,17 @@ To act as a "Senior Engineer" gatekeeper, reviewing code against strict Architec
 1.  **Diff:** Read the uncommitted changes or the difference between the current branch and `main`.
 2.  **Analyze:** Apply the rules above to the changed code.
 3.  **Report:** Generate a Markdown report categorized by "Critical" (Must Fix), "Warning" (Should Fix), and "Suggestion" (Nitpicks).
-4.  **Verdict:** Explicitly state: "APPROVED" or "CHANGES REQUESTED".
+4.  **Archive (Persistence):**
+    *   **Action:** Save the generated Markdown report to a new file.
+    *   **Target Path:** `apps/docs/src/content/reviews/<YYYY-MM-DD>_<branch-slug>.md` (Slugify the branch name).
+    *   **Content Requirement:** The file MUST start with valid Frontmatter:
+        ```yaml
+        ---
+        title: Review <Branch Name>
+        date: <Current Date Time>
+        branch: <Branch Name>
+        verdict: <APPROVED | CHANGES REQUESTED>
+        ---
+        ```
+    *   **Body:** Append the full analysis report below the frontmatter.
+5.  **Verdict:** Output the final result to the session (console) to allow/block the merge via GitOps.
