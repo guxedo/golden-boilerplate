@@ -1,5 +1,5 @@
 ---
-title: Assisted Software Engineering: The Antigravity Flow Architecture
+title: "Assisted Software Engineering: The Antigravity Flow Architecture"
 author: Architecture Team
 date: 2026-01-19
 readTime: 18 min
@@ -151,7 +151,7 @@ graph LR
     
     Browser -->|HTTPS Load| CDN
     CDN --> Static
-    Browser -->|HTTPS API Calls (CORS)| API
+    Browser -->|"HTTPS API Calls (CORS)"| API
     API -->|TCP Connection| DB
     
     style CDN fill:#000,stroke:#fff,color:#fff
