@@ -1,50 +1,59 @@
-# My Golden Stack
+# ✨ Golden Boilerplate
 
 ![CI Status](https://img.shields.io/github/actions/workflow/status/guxedo/golden-boilerplate/ci.yml?branch=main)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Stack](https://img.shields.io/badge/stack-Turborepo%20%7C%20NestJS%20%7C%20React-black)
 
-A production-ready Monorepo Boilerplate featuring NestJS, React + Vite, and a "Double Lock" Authentication strategy.
+A production-ready Monorepo designed with strict adherence to **SOLID principles**, **Domain-Driven Design (DDD)**, and **Atomic Architecture**.
+
+This project serves as the foundation for scalable, enterprise-grade applications, featuring a "Double Lock" Authentication strategy and a fully automated "Docs-as-Code" workflow.
+
+## 📚 Documentation Map
+
+Our internal documentation is located in `apps/docs`.
+
+### 🧠 Core Concepts
+*   [**SOLID & OOP in Practice**](./apps/docs/src/content/architecture/core-principles.md): Understanding the "Why" behind our code structure.
+*   [**Backend Patterns**](./apps/docs/src/content/architecture/backend-patterns.md): Services, Pagination, and Error Handling.
+*   [**Frontend Architecture**](./apps/docs/src/content/architecture/frontend-patterns.md): Atoms, Hooks, and Server State.
+*   [**Database Design**](./apps/docs/src/content/architecture/database-design.md): Schema Diagrams and Migrations.
+
+### ⚡ Development
+*   [**Functional Specs**](./apps/docs/src/content/functional): Use Cases and Sequence Diagrams.
+*   [**QA Plans**](./apps/docs/src/content/qa): Test coverage and Business Rules.
 
 ## 🚀 Quick Start
 
-1.  **Clone the repository:**
+1.  **Clone & Install:**
     ```bash
-    git clone https://github.com/username/my-golden-stack.git
-    cd my-golden-stack
-    ```
-
-2.  **Install dependencies:**
-    ```bash
+    git clone https://github.com/guxedo/golden-boilerplate.git
+    cd golden-boilerplate
     pnpm install
     ```
 
-3.  **Start the development environment:**
+2.  **Start Environment:**
     ```bash
     docker-compose up -d
     pnpm dev
     ```
-    This will spin up Postgres and start the apps in development mode.
+    *   **Frontend:** http://localhost:5173
+    *   **Backend:** http://localhost:3000
+    *   **Docs:** http://localhost:5174 (if running docs dev)
 
-## 🔑 Default Credentials (Seeded)
+## 🔑 Default Credentials
 
-The database is automatically seeded with the following users for testing:
+| Role | Email | Password | Status |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@example.com` | `password123` | `ACTIVE` |
+| **User** | `user@example.com` | `password123` | `ACTIVE` |
 
-| Role | Email | Password | Status | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@example.com` | `password123` | `ACTIVE` | Full access. |
-| **User** | `user@example.com` | `password123` | `ACTIVE` | Standard access. |
-| **User** | `pending@example.com` | `password123` | `PENDING` | Cannot login (Simulates approval flow). |
+## 🛠 Technology Stack
 
-## 📚 Documentation
+*   **Monorepo:** Turborepo
+*   **Backend:** NestJS, Prisma, PostgreSQL, Passports, Jest
+*   **Frontend:** React 18, Vite, TanStack Query, TailwindCSS, Shadcn/UI
+*   **Docs:** VitePress (Docs-as-Code)
+*   **Automation:** GitHub Actions, Custom Agents
 
--   [**Architecture**](./docs/architecture.md): "Double Lock" Auth, ACL, and Pagination logic.
--   [**Theming**](./docs/theming.md): How to customize the design tokens and CSS variables.
--   [**Deployment**](./docs/deployment.md): Docker-based deployment strategy.
-
-## 🛠 Tech Stack
-
--   **Monorepo:** Turborepo (pnpm)
--   **Backend:** NestJS, Prisma, PostgreSQL
--   **Frontend:** React, Vite, TanStack Router, TanStack Query, TailwindCSS
--   **Shared:** Zod, TypeScript
+---
+_Maintained by the Antigravity Team_
