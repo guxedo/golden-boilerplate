@@ -30,7 +30,11 @@ export function Header() {
                     <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         Home
                     </Link>
-                    {/* Add more nav links here if needed */}
+                    {user && (
+                        <Link to="/notes" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                            Notes
+                        </Link>
+                    )}
                 </nav>
                 <div className="ml-auto flex items-center space-x-4">
                     {user ? (
